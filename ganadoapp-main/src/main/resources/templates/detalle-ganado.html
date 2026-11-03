@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title th:text="'Ficha de ' + ${ganado.nombre} + ' | BoviControl'">Detalle de ganado</title>
+    <link rel="icon" type="image/svg+xml" th:href="@{/images/favicon-ganado-grande.svg}">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@600;700;800&family=Manrope:wght@400;500;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+    <link rel="stylesheet" th:href="@{/css/ganado-ui.css}">
+</head>
+<body class="app-body">
+<div th:replace="~{fragments/layout :: sidebar('lista')}"></div>
+<div class="app-frame">
+    <header th:replace="~{fragments/layout :: app-header(title=${ganado.nombre}, subtitle='Ficha animal y registro sanitario')}"></header>
+    <main class="app-content">
+    <section class="hero">
+        <div class="hero-card" data-reveal>
+            <div class="hero-content">
+                <span class="eyebrow"><i class="fas fa-id-card-clip"></i> Ficha animal</span>
+                <h1 th:text="${ganado.nombre}">Nombre</h1>
+                    <p>Consulta la información principal del animal y su registro sanitario en una vista más ordenada y fácil de recorrer.</p>
+                <div class="ganado-key-facts" style="margin-top:22px;">
+                    <div class="ganado-key-fact">
+                        <span class="ganado-key-label"><i class="fas fa-tag"></i> Raza</span>
+                        <strong class="ganado-key-value" th:text="${ganado.raza}">Holstein</strong>
+                    </div>
+                    <div class="ganado-key-fact">
+                        <span class="ganado-key-label"><i class="fas fa-weight-hanging"></i> Peso</span>
+                        <strong class="ganado-key-value" th:text="${ganado.peso + ' kg'}">400.5 kg</strong>
+                    </div>
+                    <div class="ganado-key-fact">
+                        <span class="ganado-key-label"><i class="fas fa-heart-pulse"></i> Estado</span>
+                        <strong class="ganado-key-value" th:text="${ganado.estadoSalud}">Saludable</strong>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="section">
+        <div th:if="${mensaje}" class="notice notice-success" style="margin-bottom:18px;"><span th:text="${mensaje}"></span></div>
+        <div th:if="${error}" class="notice notice-error" style="margin-bottom:18px;"><span th:text="${error}"></span></div>
+        <div class="info-card" data-reveal>
+            <div class="page-head">
+                <div>
+                    <h2 class="page-title">Datos del animal</h2>
+                        <p class="page-subtitle">Información clave para seguimiento productivo y sanitario.</p>
+                </div>
+            </div>
+            <div class="detail-grid">
+                <div class="detail-item">
+                    <div class="detail-label">ID</div>
+                    <div class="detail-value" th:text="${ganado.id}">1</div>
+                </div>
+                <div class="detail-item">
+                    <div class="detail-label">Código interno</div>
+                    <div class="detail-value" th:text="${ganado.codigoIdentificacion}">COD</div>
+                </div>
+                <div class="detail-item">
+                    <div class="detail-label">Edad</div>
+                    <div class="detail-value" th:text="${edadFormateada}">0</div>
+                </div>
+                <div class="detail-item">
+                    <div class="detail-label">Sexo</div>
+                    <div class="detail-value" th:text="${ganado.sexo}">Macho</div>
+                </div>
+                <div class="detail-item">
+                    <div class="detail-label">Marca</div>
+                    <div class="detail-value" th:text="${ganado.marcaHierro}">CR</div>
+                </div>
+                <div class="detail-item">
+                    <div class="detail-label">Estado de salud</div>
+                    <div class="detail-value" th:text="${ganado.estadoSalud}">Saludable</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="section">
+        <div class="table-card" data-reveal>
+            <div class="page-head">
+                <div>
+                    <h2 class="page-title">Vacunas registradas</h2>
+                    <p class="page-subtitle">Historial sanitario del animal con estado de seguimiento.</p>
+                </div>
+            </div>
+
+            <div th:if="${vacunas != null and !vacunas.isEmpty()}" class="list-stack">
+                <div class="list-row" th:each="vac : ${vacunas}">
+                    <div>
+                        <strong th:text="${vac.nombre}">Vacuna</strong>
+                        <p class="muted" style="margin:8px 0 0;">
+                                Aplicada el <span th:text="${#temporals.format(vac.fechaAplicacion, 'dd/MM/yyyy')}">01/01/2026</span>
+                        </p>
+                    </div>
+                    <div class="actions-inline">
+                        <span class="status-pill" th:text="${vac.estado}" th:classappend="${vac.claseEstadoCss != ''} ? ' ' + ${vac.claseEstadoCss} : ''">Estado</span>
+                        <a th:href="@{'/vacuna/editar/' + ${vac.id}}" class="btn btn-outline btn-mini" sec:authorize="hasRole('VETERINARIO')">Editar</a>
+                        <form th:action="@{'/vacuna/eliminar/' + ${vac.id}}" method="post" sec:authorize="hasRole('VETERINARIO')">
+                            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+                            <button type="submit" class="btn btn-danger btn-mini" data-confirm="¿Estás seguro de eliminar esta vacuna?">Eliminar</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <div th:if="${vacunas == null or vacunas.isEmpty()}" class="empty-card">
+                No se han registrado vacunas para este ganado.
+            </div>
+        </div>
+    </section>
+
+    <section class="section">
+        <div class="summary-grid">
+            <div class="metric-card" data-reveal>
+                <div class="metric-label">Reporte sanitario</div>
+                <div class="metric-hint" th:text="${reporteLimites}">Reporte</div>
+            </div>
+            <div class="metric-card" data-reveal>
+                <div class="metric-label">Nutrición sugerida</div>
+                <div class="metric-hint" th:text="${recomendacionNutricional}">Nutrición</div>
+            </div>
+            <div class="metric-card" data-reveal>
+                <div class="metric-label">Bienestar</div>
+                <div class="metric-hint" th:text="${recomendacionBienestar}">Bienestar</div>
+            </div>
+            <div class="metric-card" data-reveal>
+                            <div class="metric-label">Próxima vacuna</div>
+                <div class="metric-hint" th:if="${proximaVacuna != null}">
+                    <strong th:text="${proximaVacuna.nombre}">Vacuna</strong>
+                    <span> en </span>
+                    <strong th:text="${diasProximaVacuna}">0</strong>
+                    <span> día(s)</span>
+                </div>
+                <div class="metric-hint" th:if="${proximaVacuna == null}">
+                                Sin próximas dosis programadas.
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="section">
+        <div class="table-card" data-reveal>
+            <div class="page-head">
+                <div>
+                    <h2 class="page-title">Plan de alimentación estricto</h2>
+                    <p class="page-subtitle">Ración diaria calculada con edad, raza, peso y estado del bovino.</p>
+                </div>
+            </div>
+            <div class="detail-grid">
+                <div class="detail-item">
+                    <div class="detail-label">Etapa</div>
+                    <div class="detail-value" th:text="${planAlimentacion.etapa()}">Etapa</div>
+                </div>
+                <div class="detail-item">
+                    <div class="detail-label">Materia seca</div>
+                    <div class="detail-value" th:text="${planAlimentacion.materiaSecaKg() + ' kg/día'}">0</div>
+                </div>
+                <div class="detail-item">
+                    <div class="detail-label">Forraje</div>
+                    <div class="detail-value" th:text="${planAlimentacion.forrajeKg() + ' kg/día'}">0</div>
+                </div>
+                <div class="detail-item">
+                    <div class="detail-label">Concentrado</div>
+                    <div class="detail-value" th:text="${planAlimentacion.concentradoKg() + ' kg/día'}">0</div>
+                </div>
+                <div class="detail-item">
+                    <div class="detail-label">Agua</div>
+                    <div class="detail-value" th:text="${planAlimentacion.aguaLitros() + ' L/día'}">0</div>
+                </div>
+                <div class="detail-item">
+                    <div class="detail-label">Frecuencia</div>
+                    <div class="detail-value" th:text="${planAlimentacion.frecuencia()}">2 raciones</div>
+                </div>
+            </div>
+            <div class="empty-card" style="margin-top:14px; text-align:left;">
+                <strong>Observación:</strong> <span th:text="${planAlimentacion.observacion()}">Observación</span>
+            </div>
+        </div>
+    </section>
+
+    <section class="section">
+        <div class="panel-card" data-reveal>
+            <h2 class="page-title" style="font-size:2rem;">Trazabilidad y predicción de leche</h2>
+            <p class="metric-hint" style="margin-top:10px;">Toda la gestión de leche está centralizada en una vista única.</p>
+            <div class="action-row" style="margin-top:16px;">
+                <a th:href="@{'/ganado/prediccion/' + ${ganado.id}}" class="btn btn-primary"><i class="fas fa-chart-line"></i> Ir a trazabilidad de leche</a>
+            </div>
+        </div>
+    </section>
+
+    <section class="section">
+        <div class="panel-card" data-reveal>
+            <h2 class="page-title" style="font-size:2rem;">Recomendaciones para este animal</h2>
+            <p class="metric-hint" style="margin-top:8px;">Vista unificada para evitar información repetida y priorizar acciones.</p>
+
+            <div class="detail-grid" style="margin-top:16px;">
+                <div class="detail-item">
+                    <div class="detail-label">Prioridad alta</div>
+                    <div class="detail-value" style="font-size:0.95rem;">
+                        Atiende primero vacunas vencidas y alertas sanitarias activas.
+                    </div>
+                </div>
+                <div class="detail-item">
+                    <div class="detail-label">Próximos 15 días</div>
+                    <div class="detail-value" style="font-size:0.95rem;">
+                        Revisa vacunas programadas y agenda controles preventivos.
+                    </div>
+                </div>
+                <div class="detail-item">
+                    <div class="detail-label">Manejo preventivo</div>
+                    <div class="detail-value" style="font-size:0.95rem;">
+                        Mantén seguimiento de peso, condición corporal y signos clínicos tempranos.
+                    </div>
+                </div>
+                <div class="detail-item">
+                    <div class="detail-label">Nota por raza</div>
+                    <div class="detail-value" style="font-size:0.95rem;" th:text="${recomendacionVacuna}">
+                        Recomendación por raza
+                    </div>
+                </div>
+            </div>
+
+            <ul class="list-stack" style="margin-top:14px;">
+                <li class="list-row"
+                    th:each="sugerencia : ${sugerenciasManejo}"
+                    th:if="${recomendacionVacuna == null or !#strings.contains(sugerencia, recomendacionVacuna)}">
+                    <span th:text="${sugerencia}">Sugerencia</span>
+                </li>
+            </ul>
+        </div>
+    </section>
+
+    <section class="section">
+        <div class="action-row">
+            <a th:href="@{/ganado/lista}" class="btn btn-outline"><i class="fas fa-arrow-left"></i> Volver al panel</a>
+            <a th:href="@{'/ganado/editar/' + ${ganado.id}}" class="btn btn-primary" sec:authorize="hasRole('ADMIN')"><i class="fas fa-pen"></i> Editar ganado</a>
+        </div>
+    </section>
+    </main>
+</div>
+<script th:src="@{/js/ganado-ui.js}"></script>
+    <div th:replace="~{fragments/bovibot :: widget}"></div>
+</body>
+</html>
+
+
+
+
+
+
+
+
+
+
+
+
+

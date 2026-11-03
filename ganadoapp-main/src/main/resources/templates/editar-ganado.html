@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title th:text="'Editar ganado: ' + ${ganado.nombre}">Editar ganado</title>
+    <link rel="icon" type="image/svg+xml" th:href="@{/images/favicon-ganado-grande.svg}">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@600;700;800&family=Manrope:wght@400;500;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+    <link rel="stylesheet" th:href="@{/css/ganado-ui.css}">
+</head>
+<body class="app-body">
+<div th:replace="~{fragments/layout :: sidebar('lista')}"></div>
+<div class="app-frame">
+    <header th:replace="~{fragments/layout :: app-header(title='Editar ganado', subtitle='Actualiza la ficha del animal')}"></header>
+    <main class="app-content">
+    <section class="section">
+        <div class="form-card" data-reveal>
+            <span class="eyebrow" style="background:rgba(47,107,61,0.08); color:var(--primary);"><i class="fas fa-pen"></i> Actualizar ficha</span>
+            <h2 class="page-title">Editar ganado</h2>
+            <p class="page-subtitle">Ajusta la información del animal sin salir del flujo principal del sistema.</p>
+
+            <form th:action="@{/ganado/actualizar}" th:object="${ganado}" method="post">
+                <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+                <input type="hidden" th:field="*{id}">
+                <input type="hidden" id="edad_final" th:field="*{edad}">
+
+                <div class="form-grid">
+                    <div class="field span-6">
+                        <label for="marcaHierro">Marca de hierro</label>
+                        <input class="input readonly" type="text" id="marcaHierro" th:field="*{marcaHierro}" readonly>
+                    </div>
+                    <div class="field span-6">
+                        <label for="numeroArete">número de arete</label>
+                        <input class="input" type="text" id="numeroArete" th:field="*{numeroArete}" required>
+                    </div>
+                    <div class="field span-12">
+                        <label for="propietario">Propietario</label>
+                        <input class="input readonly" type="text" id="propietario" th:value="${ganado.propietario}" readonly>
+                    </div>
+                    <div class="field span-6">
+                        <label for="nombre">Nombre</label>
+                        <input class="input" type="text" id="nombre" th:field="*{nombre}" required>
+                    </div>
+                    <div class="field span-6">
+                        <label for="raza">Raza</label>
+                        <select class="select" id="raza" th:field="*{raza}" onchange="toggleOtroRaza()" required>
+                            <option value="">Seleccionar raza</option>
+                            <option value="Holstein">Holstein</option>
+                            <option value="Brahman">Brahman</option>
+                            <option value="Angus">Angus</option>
+                            <option value="Jersey">Jersey</option>
+                            <option value="Hereford">Hereford</option>
+                            <option value="Charolais">Charolais</option>
+                            <option value="Otros" th:selected="${!#lists.contains({'Holstein','Brahman','Angus','Jersey','Hereford','Charolais'}, ganado.raza)}">Otro o mestizo</option>
+                        </select>
+                    </div>
+                    <div class="field span-12" id="otroRazaContainer" style="display:none;">
+                        <label for="otraRaza">Otra raza o mestizaje</label>
+                        <input class="input" type="text" id="otraRaza" name="otraRaza"
+                               th:value="${!#lists.contains({'Holstein','Brahman','Angus','Jersey','Hereford','Charolais'}, ganado.raza) ? ganado.raza : ''}">
+                    </div>
+                    <div class="field span-4">
+                        <label for="edad_valor">Edad</label>
+                        <div class="field-addon">
+                            <input class="input" type="number" id="edad_valor" name="edadValor" min="0" step="0.1" th:value="${ganado.edad}" oninput="convertirEdadAAnios()" required>
+                            <select class="select" id="edad_unidad" name="edadUnidad" onchange="convertirEdadAAnios()">
+                                <option value="Anios" selected>Años</option>
+                                <option value="Meses">Meses</option>
+                                <option value="Dias">Días</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="field span-4">
+                        <label for="peso">Peso (kg)</label>
+                        <input class="input" type="number" id="peso" th:field="*{peso}" min="1" step="0.5" required>
+                    </div>
+                    <div class="field span-4">
+                        <label for="sexo">Sexo</label>
+                        <select class="select" id="sexo" th:field="*{sexo}" required>
+                            <option value="">Seleccionar</option>
+                            <option value="Macho">Macho</option>
+                            <option value="Hembra">Hembra</option>
+                        </select>
+                    </div>
+                    <div class="field span-12">
+                        <label for="estadoSalud">Estado de salud</label>
+                        <select class="select" id="estadoSalud" th:field="*{estadoSalud}">
+                            <option value="">No seleccionado</option>
+                            <option value="Saludable">Saludable</option>
+                            <option value="Enfermo">Enfermo</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="action-row" style="margin-top:26px;">
+                    <button type="submit" class="btn btn-primary"><i class="fas fa-floppy-disk"></i> Actualizar ganado</button>
+                    <a th:href="@{/ganado/lista}" class="btn btn-outline"><i class="fas fa-arrow-left"></i> Cancelar</a>
+                </div>
+            </form>
+        </div>
+    </section>
+    </main>
+</div>
+
+<script>
+    function toggleOtroRaza() {
+        const razaSelect = document.getElementById('raza');
+        document.getElementById('otroRazaContainer').style.display = razaSelect.value === 'Otros' ? 'block' : 'none';
+    }
+
+    function convertirEdadAAnios() {
+        const valor = parseFloat(document.getElementById('edad_valor').value);
+        const unidad = document.getElementById('edad_unidad').value;
+        let edad = 0;
+        if (!isNaN(valor) && valor >= 0) {
+            if (unidad === 'Dias') edad = valor / 365.25;
+            else if (unidad === 'Meses') edad = valor / 12;
+            else edad = valor;
+        }
+        document.getElementById('edad_final').value = edad.toFixed(2);
+    }
+
+    window.onload = () => {
+        toggleOtroRaza();
+        convertirEdadAAnios();
+    };
+</script>
+<script th:src="@{/js/ganado-ui.js}"></script>
+    <div th:replace="~{fragments/bovibot :: widget}"></div>
+</body>
+</html>
+
+
+
+
+
+
+
+
+
+
+
+
+

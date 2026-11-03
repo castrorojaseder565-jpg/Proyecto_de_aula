@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Control sanitario | BoviControl</title>
+    <link rel="icon" type="image/svg+xml" th:href="@{/images/favicon-ganado-grande.svg}">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@600;700;800&family=Manrope:wght@400;500;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+    <link rel="stylesheet" th:href="@{/css/ganado-ui.css}">
+</head>
+<body class="app-body">
+<div th:replace="~{fragments/layout :: sidebar('vacunas')}"></div>
+<div class="app-frame">
+    <header th:replace="~{fragments/layout :: app-header(title='Calendario de vacunas', subtitle='Aplicaciones, próximas dosis y estados')}"></header>
+    <main class="app-content">
+    <section class="hero">
+        <div class="hero-card" data-reveal>
+            <div class="hero-content">
+                <span class="eyebrow"><i class="fas fa-syringe"></i> Seguimiento sanitario</span>
+    <h1>Vacunación visible, ordenada y lista para actuar.</h1>
+                <p>Revisa el estado de vacunación, próximas dosis y acciones pendientes del hato.</p>
+            </div>
+        </div>
+    </section>
+    <section class="section" sec:authorize="hasRole('ADMIN')">
+        <div class="notice notice-info" data-reveal>
+            Modo Administrador: visualización de vacunas en solo lectura.
+        </div>
+    </section>
+
+    <section class="section">
+        <div class="table-card" data-reveal>
+            <div class="page-head">
+                <div>
+                    <h2 class="page-title">Calendario de vacunas</h2>
+                    <p class="page-subtitle">Registro consolidado de aplicaciones y próximas dosis del sistema.</p>
+                </div>
+            </div>
+            <div class="table-scroll">
+                <table>
+                    <thead>
+                    <tr>
+                        <th>Vacuna</th>
+                        <th>Ganado</th>
+                        <th>Aplicada</th>
+                        <th>Próxima dosis</th>
+                        <th>Estado</th>
+                        <th sec:authorize="hasRole('VETERINARIO')">Acciones</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr th:each="vacuna : ${vacunas}">
+                        <td th:text="${vacuna.nombre}">Nombre</td>
+                        <td th:text="${vacuna.ganado.nombre}">Ganado</td>
+                        <td th:text="${vacuna.fechaAplicacion}">2026-01-01</td>
+                        <td th:text="${vacuna.proximaDosis}">2026-02-01</td>
+                        <td>
+                            <span class="status-pill" th:text="${vacuna.estado}" th:classappend="${vacuna.claseEstadoCss != ''} ? ' ' + ${vacuna.claseEstadoCss} : ''">Estado</span>
+                        </td>
+                        <td sec:authorize="hasRole('VETERINARIO')">
+                            <div class="actions-inline">
+                                <a th:href="@{'/vacuna/editar/' + ${vacuna.id}}" class="btn btn-outline btn-mini">Editar</a>
+                                <form th:action="@{'/vacuna/eliminar/' + ${vacuna.id}}" method="post">
+                                    <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+                                    <button type="submit" class="btn btn-danger btn-mini" data-confirm="¿Estás seguro de eliminar esta vacuna?">Eliminar</button>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr th:if="${vacunas.isEmpty()}">
+                        <td colspan="6"><div class="empty-card">No hay registros de vacunación.</div></td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </section>
+
+    </main>
+</div>
+<script th:src="@{/js/ganado-ui.js}"></script>
+    <div th:replace="~{fragments/bovibot :: widget}"></div>
+</body>
+</html>
+
+
+
+
+
+
+
+
+
+
+
+

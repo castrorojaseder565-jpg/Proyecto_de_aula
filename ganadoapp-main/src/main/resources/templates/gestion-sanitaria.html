@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Gestión sanitaria | BoviControl</title>
+    <link rel="icon" type="image/svg+xml" th:href="@{/images/favicon-ganado-grande.svg}">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@600;700;800&family=Manrope:wght@400;500;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+    <link rel="stylesheet" th:href="@{/css/ganado-ui.css}">
+</head>
+<body class="app-body">
+<div th:replace="~{fragments/layout :: sidebar('sanitaria')}"></div>
+<div class="app-frame">
+    <header th:replace="~{fragments/layout :: app-header(title='Gestión sanitaria', subtitle='Alertas, vacunas y alimentación del hato')}"></header>
+    <main class="app-content">
+    <section class="hero">
+        <div class="hero-card" data-reveal>
+            <div class="hero-content">
+                <span class="eyebrow"><i class="fas fa-heart-pulse"></i> Gestión sanitaria</span>
+                <h1>Salud, alimentación y monitoreo del hato.</h1>
+                <p>Esta vista resume alertas sanitarias, plan de alimentación estricto por bovino y comportamiento general de producción de leche para tomar decisiones tácticas con anticipación.</p>
+            </div>
+        </div>
+    </section>
+    <section class="section" sec:authorize="hasRole('ADMIN')">
+        <div class="notice notice-info" data-reveal>
+            Modo Administrador: esta sección veterinaria es de solo lectura.
+        </div>
+    </section>
+
+    <section class="section">
+        <div class="kpi-grid">
+            <article class="kpi-card" data-reveal>
+                <header>Total de animales <span class="kpi-icon"><i class="fas fa-cow"></i></span></header>
+                <strong th:text="${totalGanado}">0</strong>
+                <p>Inventario bajo seguimiento</p>
+            </article>
+            <article class="kpi-card" data-reveal>
+                <header>En monitoreo <span class="kpi-icon"><i class="fas fa-stethoscope"></i></span></header>
+                <strong th:text="${totalEnMonitoreo}">0</strong>
+                <p>Animales que no están saludables</p>
+            </article>
+            <article class="kpi-card" data-reveal>
+                <header>Vacunas vencidas <span class="kpi-icon"><i class="fas fa-triangle-exclamation"></i></span></header>
+                <strong th:text="${totalVacunasVencidas}">0</strong>
+                <p>Requieren atención inmediata</p>
+            </article>
+            <article class="kpi-card" data-reveal>
+                <header>Vacunas próximas <span class="kpi-icon"><i class="fas fa-calendar-check"></i></span></header>
+                <strong th:text="${totalVacunasProximas}">0</strong>
+                <p>Pendientes o por aplicar</p>
+            </article>
+        </div>
+    </section>
+
+    <section class="section">
+        <div class="summary-grid">
+            <div class="metric-card" data-reveal>
+                <div class="metric-label">Leche diaria promedio (hato)</div>
+                <div class="metric-value" th:text="${totalLecheDiaria + ' L'}">0 L</div>
+            </div>
+            <div class="metric-card" data-reveal>
+                <div class="metric-label">Leche últimos 7 días</div>
+                <div class="metric-value" th:text="${totalLeche7Dias + ' L'}">0 L</div>
+            </div>
+            <div class="metric-card" data-reveal>
+                <div class="metric-label">Leche últimos 30 días</div>
+                <div class="metric-value" th:text="${totalLeche30Dias + ' L'}">0 L</div>
+            </div>
+            <div class="metric-card" data-reveal>
+                <div class="metric-label">Predicción próxima semana</div>
+                <div class="metric-value" th:text="${prediccionLecheHato7Dias + ' L'}">0 L</div>
+            </div>
+        </div>
+    </section>
+
+    <section class="section">
+        <div class="dashboard-grid">
+            <div class="table-card" data-reveal>
+                <div class="page-head">
+                    <div>
+                        <h2 class="page-title">Animales en monitoreo</h2>
+                        <p class="page-subtitle">Ganado que no se encuentra marcado como saludable.</p>
+                    </div>
+                </div>
+                <div class="list-stack">
+                    <div class="list-row" th:each="g : ${ganadoEnfermo}">
+                        <div>
+                            <strong th:text="${g.nombre}">Animal</strong>
+                            <p class="muted" style="margin:8px 0 0;">
+                                <span th:text="${g.raza}">Raza</span> ·
+                                <span th:text="${g.numeroArete}">Arete</span>
+                            </p>
+                        </div>
+                        <div class="actions-inline">
+                            <span class="status-pill status-danger" th:text="${g.estadoSalud}">Estado</span> <a th:href="@{/ganado/detalle/{id}(id=${g.id})}" class="btn btn-outline btn-mini">Ver ficha</a>
+                        </div>
+                    </div>
+                    <div th:if="${#lists.isEmpty(ganadoEnfermo)}" class="empty-card">No hay animales en monitoreo sanitario por ahora.</div>
+                </div>
+            </div>
+
+            <div class="panel-card" data-reveal>
+                <h2 class="page-title" style="font-size:2rem;">Acciones sugeridas</h2>
+                <div class="list-stack" style="margin-top:18px;">
+                    <div class="list-row">
+                        <div>
+                            <strong>Revisar vacunas vencidas</strong>
+                            <p class="muted" style="margin:8px 0 0;">Prioriza estos animales para evitar atrasos sanitarios.</p>
+                        </div>
+                        <strong th:text="${totalVacunasVencidas}">0</strong>
+                    </div>
+                    <div class="list-row">
+                        <div>
+                            <strong>Programar próximas dosis</strong>
+                            <p class="muted" style="margin:8px 0 0;">Hay vacunas pendientes o próximas por aplicar.</p>
+                        </div>
+                        <strong th:text="${totalVacunasProximas}">0</strong>
+                    </div>
+                </div>
+                <div class="list-stack" style="margin-top:14px;">
+                    <div class="list-row" th:each="sugerencia : ${sugerenciasSanitarias}">
+                        <span th:text="${sugerencia}">Sugerencia sanitaria</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="section">
+        <div class="table-card" data-reveal>
+            <div class="page-head">
+                <div>
+                    <h2 class="page-title">Alimentación estricta por bovino</h2>
+                    <p class="page-subtitle">Ración sugerida usando edad, raza, peso y estado sanitario para estandarizar el manejo diario.</p>
+                </div>
+            </div>
+            <div class="table-scroll">
+                <table>
+                    <thead>
+                    <tr>
+                        <th>Bovino</th>
+                        <th>Estado Sanitario</th>
+                        <th>Etapa</th>
+                        <th>Dieta Recomendada</th>
+                        <th>Proporción F/C</th>
+                        <th>MS (kg/día)</th>
+                        <th>Forraje (kg/día)</th>
+                        <th>Concentrado (kg/día)</th>
+                        <th>Agua (L/día)</th>
+                        <th>Frecuencia</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr th:each="plan : ${planesAlimentacion}">
+                        <td>
+                            <strong th:text="${plan.nombre()}">Bovino</strong>
+                            <p class="muted" style="margin:6px 0 0;" th:text="${plan.raza() + ' · ' + plan.pesoKg() + ' kg'}">Raza</p>
+                        </td>
+                        <td>
+                            <span th:class="'status-pill ' + (${#strings.equalsIgnoreCase(plan.estadoSalud(), 'Saludable')} ? 'status-soft' : 'status-danger')" th:text="${plan.estadoSalud()}">Estado</span>
+                        </td>
+                        <td th:text="${plan.etapa()}">Etapa</td>
+                        <td>
+                            <span style="display:block; font-size:0.85rem; font-weight:500; color:var(--text);" th:text="${plan.tipoForraje()}">Forraje</span>
+                            <span class="muted" style="font-size:0.75rem;" th:text="${plan.tipoConcentrado()}">Concentrado</span>
+                        </td>
+                        <td>
+                            <div style="display: flex; flex-direction: column; gap: 4px; min-width: 100px;">
+                                <div style="width: 100%; background: var(--bg); border-radius: 4px; overflow: hidden; display: flex; height: 6px;">
+                                    <div th:style="'width: ' + ${plan.ratioForraje()} + '%; background: var(--primary);'" th:title="'Forraje: ' + ${plan.ratioForraje()} + '%'"></div>
+                                    <div th:style="'width: ' + ${plan.ratioConcentrado()} + '%; background: var(--accent);'" th:title="'Concentrado: ' + ${plan.ratioConcentrado()} + '%'"></div>
+                                </div>
+                                <span class="muted" style="font-size: 0.72rem; font-weight: 500;" th:text="${plan.ratioForraje() + '% F / ' + plan.ratioConcentrado() + '% C'}"></span>
+                            </div>
+                        </td>
+                        <td th:text="${plan.materiaSecaKg()}">0</td>
+                        <td th:text="${plan.forrajeKg()}">0</td>
+                        <td th:text="${plan.concentradoKg()}">0</td>
+                        <td th:text="${plan.aguaLitros()}">0</td>
+                        <td th:text="${plan.frecuencia()}">2 raciones</td>
+                    </tr>
+                    <tr th:if="${#lists.isEmpty(planesAlimentacion)}">
+                        <td colspan="10"><div class="empty-card">No hay datos para construir planes de alimentación.</div></td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </section>
+
+
+    <section class="section">
+        <div class="table-card" data-reveal>
+            <div class="page-head">
+                <div>
+                    <h2 class="page-title">Vacunas vencidas</h2>
+                    <p class="page-subtitle">Registros que requieren atención inmediata.</p>
+                </div>
+            </div>
+            <div class="table-scroll">
+                <table>
+                    <thead>
+                    <tr>
+                        <th>Ganado</th>
+                        <th>Vacuna</th>
+                        <th>Fecha de aplicación</th>
+                        <th>Próxima dosis</th>
+                        <th>Estado</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr th:each="v : ${vacunasVencidas}">
+                        <td th:text="${v.ganado.nombre}">Ganado</td>
+                        <td th:text="${v.nombre}">Vacuna</td>
+                        <td th:text="${v.fechaAplicacion}">2026-01-01</td>
+                        <td th:text="${v.proximaDosis}">2026-02-01</td>
+                        <td><span class="status-pill status-danger" th:text="${v.estado}">Vencida</span></td>
+                    </tr>
+                    <tr th:if="${#lists.isEmpty(vacunasVencidas)}">
+                        <td colspan="5"><div class="empty-card">No hay vacunas vencidas en este momento.</div></td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </section>
+
+    <section class="section">
+        <div class="table-card" data-reveal>
+            <div class="page-head">
+                <div>
+                    <h2 class="page-title">Vacunas por programar</h2>
+                    <p class="page-subtitle">Pendientes, próximas o listas para aplicar hoy.</p>
+                </div>
+            </div>
+            <div class="table-scroll">
+                <table>
+                    <thead>
+                    <tr>
+                        <th>Ganado</th>
+                        <th>Vacuna</th>
+                        <th>Próxima dosis</th>
+                        <th>Estado</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr th:each="v : ${vacunasProximas}">
+                        <td th:text="${v.ganado.nombre}">Ganado</td>
+                        <td th:text="${v.nombre}">Vacuna</td>
+                        <td th:text="${v.proximaDosis}">2026-02-01</td>
+                        <td><span class="status-pill status-soft" th:text="${v.estado}">Pendiente</span></td>
+                    </tr>
+                    <tr th:if="${#lists.isEmpty(vacunasProximas)}">
+                        <td colspan="4"><div class="empty-card">No hay vacunas pendientes o próximas por ahora.</div></td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </section>
+
+    </main>
+</div>
+<script th:src="@{/js/ganado-ui.js}"></script>
+    <div th:replace="~{fragments/bovibot :: widget}"></div>
+</body>
+</html>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

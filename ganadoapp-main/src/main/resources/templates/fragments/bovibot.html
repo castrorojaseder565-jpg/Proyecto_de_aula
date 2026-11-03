@@ -1,0 +1,32 @@
+<div th:fragment="widget" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+  <section id="bovibot" class="bovibot" sec:authorize="hasAnyRole('ADMIN','VETERINARIO')" data-bovibot>
+    <input type="hidden" data-csrf th:value="${_csrf.token}">
+    <button class="bovibot-launcher" type="button" aria-label="Abrir Asistente de BoviControl" title="Asistente de BoviControl" aria-expanded="false" data-open>
+      <span>Chat</span>
+    </button>
+    <aside class="bovibot-panel" role="dialog" aria-label="Asistente BoviBot" aria-modal="false" hidden data-panel>
+      <header class="bovibot-header" data-drag-handle>
+        <div class="bovibot-identity"><strong>Asistente BoviControl</strong><small>Disponible para consultas</small></div>
+        <nav><button type="button" title="Ampliar chat" data-full>Ampliar</button><button type="button" title="Cerrar chat" data-min data-close>Cerrar</button></nav>
+      </header>
+      <p class="bovibot-intro">Pregunta sobre ganadería, cómo usar BoviControl o consulta datos reales del hato.</p>
+      <form class="bovibot-form" data-form><textarea rows="1" maxlength="2000" placeholder="¿Qué quieres consultar?" aria-label="Tu pregunta" data-input></textarea><button type="submit" data-send>Enviar</button></form>
+      <p class="bovibot-suggestions-title">Elige una pregunta o cuéntame qué buscas</p>
+      <div class="bovibot-suggestions" data-suggestions>
+        <button type="button" sec:authorize="hasRole('ADMIN')">¿Cuántos ganados tenemos registrados?</button>
+        <button type="button" sec:authorize="hasRole('ADMIN')">¿Qué raza es más común en el hato?</button>
+        <button type="button" sec:authorize="hasRole('ADMIN')">¿Cuántos ganados tienen vacunas aplicadas?</button>
+        <button type="button">Dime cuáles necesitan vacunación esta semana</button>
+        <button type="button">¿Qué bovinos aparecen con estado enfermo?</button>
+        <button type="button" sec:authorize="hasRole('ADMIN')">¿Cuánta leche produjo el hato en los últimos 7 días?</button>
+        <button type="button">¿Qué información tiene un bovino por su arete?</button>
+        <button type="button" sec:authorize="hasRole('ADMIN')">¿Cómo registro un ganado?</button>
+        <button type="button" sec:authorize="hasRole('VETERINARIO')">¿Cómo registro una vacuna?</button>
+      </div>
+      <div class="bovibot-messages" aria-live="polite" aria-label="Conversación" data-messages></div>
+      <footer><button type="button" data-clear>Limpiar conversación</button><span data-state>Enter para enviar</span></footer>
+    </aside>
+  </section>
+  <script th:src="@{/js/bovibot.js}" defer></script>
+</div>
+

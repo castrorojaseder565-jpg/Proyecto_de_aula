@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Invitar veterinario | BoviControl</title>
+    <link rel="icon" type="image/svg+xml" th:href="@{/images/favicon-ganado-grande.svg}">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@600;700;800&family=Manrope:wght@400;500;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+    <link rel="stylesheet" th:href="@{/css/ganado-ui.css}">
+</head>
+<body class="app-body">
+<div th:replace="~{fragments/layout :: sidebar('invitaciones')}"></div>
+<div class="app-frame">
+    <header th:replace="~{fragments/layout :: app-header(title='Invitar veterinario', subtitle='El enlace vence en 48 horas')}"></header>
+    <main class="app-content">
+        <section class="section">
+            <div class="form-card" data-reveal>
+                <div th:if="${exito}" class="notice notice-success"><span th:text="${exito}"></span></div>
+                <div th:if="${error}" class="notice notice-error"><span th:text="${error}"></span></div>
+                <form th:action="@{/usuarios/invitaciones}" method="post" class="form-grid" style="max-width:620px; margin-top:8px;">
+                    <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+                    <div class="field span-12">
+                        <label for="nombre">Nombre del veterinario</label>
+                        <input class="input" id="nombre" name="nombre" type="text" maxlength="120" autocomplete="name" required placeholder="Nombre completo">
+                    </div>
+                    <div class="field span-12">
+                        <label for="correo">Correo del veterinario</label>
+                        <input class="input" id="correo" name="correo" type="email" maxlength="254" autocomplete="email" required placeholder="veterinario@ejemplo.com">
+                    </div>
+                    <div class="field span-12">
+                        <button class="btn btn-primary" type="submit">Enviar invitación por correo</button>
+                        <a th:href="@{/usuarios}" class="btn btn-outline" style="margin-left:8px;">Volver a usuarios</a>
+                    </div>
+                </form>
+            </div>
+        </section>
+    </main>
+</div>
+<script th:src="@{/js/ganado-ui.js}"></script>
+<div th:replace="~{fragments/bovibot :: widget}"></div>
+</body>
+</html>

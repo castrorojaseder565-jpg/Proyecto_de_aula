@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Asistente ganadero | BoviControl</title>
+    <link rel="icon" type="image/svg+xml" th:href="@{/images/favicon-ganado-grande.svg}">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@600;700;800&family=Manrope:wght@400;500;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+    <link rel="stylesheet" th:href="@{/css/ganado-ui.css}">
+</head>
+<body class="app-body">
+<div th:replace="~{fragments/layout :: sidebar('lista')}"></div>
+<div class="app-frame">
+    <header th:replace="~{fragments/layout :: app-header(title='Asistente', subtitle='Pregunta sobre ganadería y consulta tu hato con IA')}"></header>
+    <main class="app-content chatbot-page">
+    <section class="section">
+        <div class="chatbot-card" data-reveal>
+            <div class="chatbot-heading">
+                <div class="chatbot-icon"><i class="fas fa-robot"></i></div>
+                <div>
+                    <span class="eyebrow">Asistente de GanadoApp</span>
+                    <h1 class="page-title">Asistente con IA</h1>
+                    <p class="page-subtitle">Pregunta sobre ganadería o consulta fichas, vacunas y datos reales del hato.</p>
+                </div>
+            </div>
+
+            <div id="chatMessages" class="chatbot-messages" role="log" aria-live="polite" aria-relevant="additions">
+                <article class="chat-message assistant-message">
+                    <span class="chat-message-label">Asistente</span>
+                    <p>Hola. Puedes preguntarme sobre ganadería y cómo usar BoviControl. También puedo consultar fichas y vacunas del hato. Como administrador, pregunta “¿Cuántos ganados tenemos registrados?” o “¿Cuáles necesitan vacunación esta semana?”.</p>
+                </article>
+            </div>
+
+            <form id="chatForm" class="chatbot-form">
+                <input id="csrfToken" type="hidden" th:value="${_csrf.token}">
+                <label class="chatbot-input-label muted" for="chatMessage">Tu pregunta</label>
+                <textarea id="chatMessage" name="mensaje" rows="2" maxlength="1000" required
+                          placeholder="Pregunta lo que quieras…" aria-describedby="chatHint"></textarea>
+                <div class="chatbot-form-footer">
+                    <span id="chatHint" class="muted">Para consultar un animal específico, incluye su ID, código o número de arete. Los conteos generales son exclusivos del administrador.</span>
+                    <button id="chatSend" class="btn btn-primary" type="submit">
+                        <i class="fas fa-paper-plane"></i> Enviar
+                    </button>
+                </div>
+            </form>
+            <p id="chatStatus" class="chatbot-status" role="status" aria-live="polite"></p>
+        </div>
+    </section>
+    </main>
+</div>
+<script th:src="@{/js/ganado-ui.js}"></script>
+<script th:src="@{/js/chatbot.js}" defer></script>
+    <div th:replace="~{fragments/bovibot :: widget}"></div>
+</body>
+</html>
+
+

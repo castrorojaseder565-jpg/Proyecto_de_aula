@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Ingresar | BoviControl</title>
+    <link rel="icon" type="image/svg+xml" th:href="@{/images/favicon-ganado-grande.svg}">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@600;700;800&family=Manrope:wght@400;500;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+    <link rel="stylesheet" th:href="@{/css/ganado-ui.css}">
+</head>
+<body class="page-auth login-reference-page">
+<header class="login-reference-header">
+    <a class="login-reference-brand" th:href="@{/}" aria-label="BoviControl, ir al inicio">
+        <img th:src="@{/images/ganado-mark.svg}" alt="">
+        <span>BoviControl</span>
+    </a>
+</header>
+<main class="login-reference-main">
+    <section class="login-reference-welcome" aria-labelledby="login-welcome-title">
+        <h1 id="login-welcome-title">Bienvenido<br>de vuelta</h1>
+        <p>Inicia sesión con tu cuenta para poder<br class="login-reference-desktop-break"> seguir usando BoviControl.</p>
+    </section>
+
+    <section class="login-reference-form" aria-label="Formulario de inicio de sesión">
+        <div th:if="${param.error}" class="notice notice-error">Correo o contraseña incorrectos. Revisa los datos e intenta de nuevo.</div>
+        <div th:if="${param.errorRol}" class="notice notice-error">El rol seleccionado no coincide con tu cuenta. Verifica el rol de ingreso.</div>
+        <div th:if="${mensaje}" class="notice notice-success" th:text="${mensaje}"></div>
+        <div th:if="${param.logout}" class="notice notice-info">La sesión se cerró correctamente.</div>
+        <div th:if="${param.registroExitoso}" class="notice notice-success">Registro completado. Ya puedes ingresar al sistema.</div>
+        <div th:if="${solicitudPendiente}" class="notice notice-info">Tu solicitud fue enviada. Podrás iniciar sesión cuando el administrador apruebe tu acceso.</div>
+
+        <form th:action="@{/login}" method="post" data-auth-form>
+            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+            <div class="login-reference-fields">
+                <div class="field">
+                    <label class="login-reference-sr-only" for="username">Correo electrónico</label>
+                    <input class="input" type="email" id="username" name="username" placeholder="Correo electrónico" autocomplete="username" required>
+                </div>
+                <div class="field">
+                    <label class="login-reference-sr-only" for="password">Contraseña</label>
+                    <div class="input-with-action">
+                        <input class="input" type="password" id="password" name="password" placeholder="Contraseña" autocomplete="current-password" required>
+                        <button class="input-action-btn" type="button" data-toggle-password="password" aria-label="Mostrar u ocultar contraseña">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <div class="login-command-actions">
+                <button type="submit" class="login-command-button"><span>Entrar</span></button>
+                <a th:href="@{/}" class="login-return-link">Volver al inicio</a>
+            </div>
+        </form>
+        <p class="login-reference-help">El acceso de veterinarios se gestiona mediante invitación por correo. Contacta con el administrador.</p>
+    </section>
+</main>
+<script th:src="@{/js/ganado-ui.js}"></script>
+    <div th:replace="~{fragments/bovibot :: widget}"></div>
+</body>
+</html>
+
+
+
+
+
+
+
+
+
+
+

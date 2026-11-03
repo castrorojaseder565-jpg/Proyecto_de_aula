@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Editar usuario | BoviControl</title>
+    <link rel="icon" type="image/svg+xml" th:href="@{/images/favicon-ganado-grande.svg}">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@600;700;800&family=Manrope:wght@400;500;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+    <link rel="stylesheet" th:href="@{/css/ganado-ui.css}">
+</head>
+<body class="app-body">
+<div th:replace="~{fragments/layout :: sidebar('usuarios')}"></div>
+<div class="app-frame">
+    <header th:replace="~{fragments/layout :: app-header(title='Editar usuario', subtitle='Nombre, correo, rol y credenciales')}"></header>
+    <main class="app-content">
+    <section class="section">
+        <div class="form-card" data-reveal>
+            <span class="eyebrow" style="background:rgba(47,107,61,0.08); color:var(--primary);"><i class="fas fa-user-gear"></i> Gestión de acceso</span>
+            <h2 class="page-title">Editar usuario</h2>
+            <p class="page-subtitle">Ajusta nombre, correo, rol y credenciales desde una vista consistente con el resto del sistema.</p>
+
+            <div th:if="${exito}" class="notice notice-success"><span th:text="${exito}"></span></div>
+            <div th:if="${error}" class="notice notice-error"><span th:text="${error}"></span></div>
+
+            <form th:action="@{/usuarios/editar}" th:object="${usuario}" method="post">
+                <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+                <input type="hidden" th:field="*{id}">
+
+                <div class="form-grid">
+                    <div class="field span-12">
+                        <label for="nombre">Nombre completo</label>
+                        <input class="input" type="text" id="nombre" th:field="*{nombre}" placeholder="Ej: Juan Pérez" required>
+                    </div>
+                    <div class="field span-12">
+                    <label for="correo">Correo electrónico</label>
+                        <input class="input" type="email" id="correo" th:field="*{correo}" placeholder="ejemplo@bovicontrol.com" required>
+                    </div>
+                    <div class="field span-12">
+                        <label for="rol">Rol</label>
+                        <select class="select" id="rol" th:field="*{rol}" required>
+                            <option value="">Seleccione un rol</option>
+                            <option value="ADMIN">Administrador</option>
+                            <option value="VETERINARIO">Veterinario</option>
+                            <option value="VACUNADOR">Vacunador</option>
+                        </select>
+                        <small>El rol define los permisos de acceso dentro de la plataforma.</small>
+                    </div>
+                    <div class="field span-12">
+                    <label for="password">Contraseña (opcional)</label>
+                    <input class="input" type="password" id="password" th:field="*{password}" autocomplete="new-password" placeholder="Dejar vacío si no cambia la contraseña">
+                    </div>
+                </div>
+
+                <div class="action-row" style="margin-top:26px;">
+                    <button type="submit" class="btn btn-primary"><i class="fas fa-floppy-disk"></i> Guardar cambios</button>
+                    <a th:href="@{/usuarios}" class="btn btn-outline"><i class="fas fa-arrow-left"></i> Volver a usuarios</a>
+                </div>
+            </form>
+        </div>
+    </section>
+    </main>
+</div>
+<script th:src="@{/js/ganado-ui.js}"></script>
+    <div th:replace="~{fragments/bovibot :: widget}"></div>
+</body>
+</html>
+
+
+
+
+
+
+
+
+
+
+
+

@@ -1,0 +1,13 @@
+spring.datasource.url=jdbc:mysql://localhost:3306/ganaderia_bd
+spring.datasource.username=${DB_USERNAME}
+spring.datasource.password=${DB_PASSWORD}
+
+# Asistente conversacional con Groq (crear una clave en GroqCloud y guardarla en .env)
+groq.api-key=${GROQ_API_KEY:}
+groq.model=${GROQ_MODEL:qwen/qwen3.8-27b}
+
+# Actívalo únicamente una vez en una base de datos nueva, y luego déjalo en false.
+app.bootstrap-admin.enabled=${APP_BOOTSTRAP_ADMIN_ENABLED:false}
+app.bootstrap-admin.name=${APP_BOOTSTRAP_ADMIN_NAME:}
+app.bootstrap-admin.email=${APP_BOOTSTRAP_ADMIN_EMAIL:}
+app.bootstrap-admin.password=${APP_BOOTSTRAP_ADMIN_PASSWORD:}

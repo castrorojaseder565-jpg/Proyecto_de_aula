@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Activar cuenta | BoviControl</title>
+    <link rel="icon" type="image/svg+xml" th:href="@{/images/favicon-ganado-grande.svg}">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@600;700;800&family=Manrope:wght@400;500;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+    <link rel="stylesheet" th:href="@{/css/ganado-ui.css}">
+</head>
+<body class="page-auth">
+    <main class="container-shell">
+    <section class="section">
+        <div class="form-card" style="max-width:620px;margin:0 auto;">
+            <span class="eyebrow">Invitación de veterinario</span>
+            <h1 class="page-title">Activa tu cuenta</h1>
+            <p class="page-subtitle" th:if="${invitacion}">Crea una contraseña para ingresar a BoviControl.</p>
+            <div th:if="${error}" class="notice notice-error"><span th:text="${error}">Enlace no válido</span></div>
+            <div th:if="${invitacion}" class="notice notice-info">
+                <strong th:text="${invitacion.nombre}">Nombre</strong><br>
+                <span th:text="${invitacion.correo}">correo@ejemplo.com</span>
+            </div>
+            <form th:if="${invitacion}" th:action="@{/registro/invitacion}" th:object="${solicitud}" method="post" class="form-grid">
+                <input type="hidden" th:field="*{token}">
+                <div class="field span-12">
+                    <label for="password">Contraseña</label>
+                    <input class="input" type="password" id="password" th:field="*{password}" autocomplete="new-password" minlength="12" maxlength="72" required>
+                    <small>Usa al menos 12 caracteres, con mayúscula, minúscula, número y símbolo.</small>
+                    <small class="notice notice-error" th:if="${#fields.hasErrors('password')}" th:errors="*{password}"></small>
+                </div>
+                <div class="field span-12">
+                    <label for="confirmPassword">Confirma la contraseña</label>
+                    <input class="input" type="password" id="confirmPassword" th:field="*{confirmPassword}" autocomplete="new-password" minlength="12" maxlength="72" required>
+                    <small class="notice notice-error" th:if="${#fields.hasErrors('confirmPassword')}" th:errors="*{confirmPassword}"></small>
+                </div>
+                <div class="field span-12"><button class="btn btn-primary" type="submit">Activar cuenta</button></div>
+            </form>
+            <a th:href="@{/login}" class="btn btn-outline" style="margin-top:16px;">Ir al inicio de sesión</a>
+        </div>
+    </section>
+</main>
+<script th:src="@{/js/ganado-ui.js}"></script>
+</body>
+</html>

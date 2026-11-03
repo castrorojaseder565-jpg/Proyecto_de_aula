@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title th:text="'Predicción de leche - ' + ${ganado.nombre} + ' | BoviControl'">Predicción de leche</title>
+    <link rel="icon" type="image/svg+xml" th:href="@{/images/favicon-ganado-grande.svg}">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@600;700;800&family=Manrope:wght@400;500;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+    <link rel="stylesheet" th:href="@{/css/ganado-ui.css}">
+</head>
+<body class="app-body">
+<div th:replace="~{fragments/layout :: sidebar('lista')}"></div>
+<div class="app-frame">
+    <header th:replace="~{fragments/layout :: app-header(title='Predicción de leche', subtitle='Trazabilidad productiva del animal')}"></header>
+    <main class="app-content">
+    <section class="section">
+        <div th:if="${mensaje}" class="notice notice-success" style="margin-bottom:18px;"><span th:text="${mensaje}"></span></div>
+        <div th:if="${error}" class="notice notice-error" style="margin-bottom:18px;"><span th:text="${error}"></span></div>
+    </section>
+
+    <section class="hero">
+        <div class="hero-card" data-reveal>
+            <div class="hero-content">
+                <span class="eyebrow"><i class="fas fa-cow"></i> Predicción individual</span>
+                <h1 th:text="${ganado.nombre}">Ganado</h1>
+                <p class="page-subtitle">Vista exclusiva de predicción para análisis de producción de leche.</p>
+            </div>
+        </div>
+    </section>
+
+    <section class="section">
+        <div class="summary-grid">
+            <div class="metric-card" data-reveal>
+                <div class="metric-label">Predicción mañana</div>
+                <div class="metric-value" th:text="${prediccionLecheManana + ' L'}">0 L</div>
+                <div class="metric-hint">Estimación para el siguiente día</div>
+            </div>
+            <div class="metric-card" data-reveal>
+                <div class="metric-label">Predicción próxima semana</div>
+                <div class="metric-value" th:text="${prediccionLeche7Dias + ' L'}">0 L</div>
+                <div class="metric-hint">Proyección sobre registros recientes</div>
+            </div>
+            <div class="metric-card" data-reveal>
+                <div class="metric-label">Predicción próximo mes</div>
+                <div class="metric-value" th:text="${prediccionLeche30Dias + ' L'}">0 L</div>
+                <div class="metric-hint">Proyección basada en tendencia mensual</div>
+            </div>
+        </div>
+    </section>
+
+    <section class="section">
+        <div class="table-card" data-reveal>
+            <div class="page-head">
+                <div>
+                    <h2 class="page-title">Gráfica de producción y regresión lineal</h2>
+                    <p class="page-subtitle">
+                        Litros reales por día (barras), tendencia estimada con regresión lineal (Weka)
+                        <span th:if="${graficoLeche.regresionDisponible}"> y punto de predicción para mañana.</span>
+                        <span th:unless="${graficoLeche.regresionDisponible}">. Registra al menos 3 días con ordeño para activar la línea de tendencia.</span>
+                    </p>
+                </div>
+            </div>
+            <div class="chart-leche-container">
+                <canvas id="graficoLeche" aria-label="Gráfica de producción de leche"></canvas>
+            </div>
+            <div class="chart-legend" th:if="${graficoLeche.regresionDisponible}">
+                <span><i class="legend-dot legend-real"></i> Producción real (L/día)</span>
+                <span><i class="legend-dot legend-regression"></i> Regresión lineal (ajuste)</span>
+                <span><i class="legend-dot legend-prediction"></i> Predicción mañana: <strong th:text="${graficoLeche.valorPrediccion + ' L'}">0 L</strong></span>
+            </div>
+        </div>
+    </section>
+
+    <section class="section">
+        <div class="table-card" data-reveal>
+            <div class="page-head">
+                <div>
+                    <h2 class="page-title">Producción reciente</h2>
+                    <p class="page-subtitle">Contexto de producción real para interpretar la predicción.</p>
+                </div>
+            </div>
+            <div class="summary-grid">
+                <div class="metric-card">
+                    <div class="metric-label">Últimos 7 días</div>
+                    <div class="metric-value" th:text="${leche7Dias + ' L'}">0 L</div>
+                    <div class="metric-hint" th:text="${periodo7Dias}">01/01/2026 - 07/01/2026</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-label">Últimos 30 días</div>
+                    <div class="metric-value" th:text="${leche30Dias + ' L'}">0 L</div>
+                    <div class="metric-hint" th:text="${periodo30Dias}">01/01/2026 - 30/01/2026</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="section" sec:authorize="hasRole('ADMIN')">
+        <div class="table-card" data-reveal>
+            <div class="page-head">
+                <div>
+                    <h2 class="page-title">Registrar ordeño real</h2>
+                    <p class="page-subtitle">Captura litros por fecha y turno para construir trazabilidad real.</p>
+                </div>
+            </div>
+            <form th:action="@{/ganado/leche/registrar}" method="post" class="form-grid">
+                <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+                <input type="hidden" name="ganadoId" th:value="${ganado.id}">
+                <div class="field span-4">
+                    <label for="fechaRegistro">Fecha</label>
+                    <input class="input" type="date" id="fechaRegistro" name="fechaRegistro" th:value="${hoy}" th:min="${hoy}" th:max="${hoy}" required>
+                </div>
+                <div class="field span-4">
+                    <label for="turno">Turno</label>
+                    <select class="select" id="turno" name="turno" required>
+                        <option value="MANANA">Mañana</option>
+                        <option value="TARDE">Tarde</option>
+                        <option value="NOCHE">Noche</option>
+                    </select>
+                </div>
+                <div class="field span-4">
+                    <label for="litros">Litros</label>
+                    <input class="input" type="number" id="litros" name="litros" min="0.1" max="80" step="0.1" required>
+                </div>
+                <div class="field span-12">
+                    <label for="observacion">Observación (opcional)</label>
+                    <input class="input" type="text" id="observacion" name="observacion" maxlength="255" placeholder="Ej: Producción baja por clima">
+                </div>
+                <div class="field span-12">
+                    <button type="submit" class="btn btn-primary"><i class="fas fa-floppy-disk"></i> Guardar registro de leche</button>
+                </div>
+            </form>
+        </div>
+    </section>
+
+    <section class="section" sec:authorize="hasRole('VETERINARIO')">
+        <div class="empty-card" data-reveal>
+            Esta trazabilidad de leche es de solo lectura para el rol de veterinario.
+        </div>
+    </section>
+
+    <section class="section">
+        <div class="table-card" data-reveal>
+            <div class="page-head">
+                <div>
+                    <h2 class="page-title">Historial de ordeños</h2>
+                    <p class="page-subtitle">Registros reales por fecha y turno.</p>
+                </div>
+            </div>
+            <div class="table-scroll">
+                <table>
+                    <thead>
+                    <tr>
+                        <th>Fecha</th>
+                        <th>Turno</th>
+                        <th>Litros</th>
+                        <th>Observación</th>
+                        <th sec:authorize="hasRole('ADMIN')">Acciones</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr th:each="item : ${registrosLeche}">
+                        <td th:text="${item.fechaRegistro}">2026-03-26</td>
+                        <td th:text="${item.turno}">Mañana</td>
+                        <td th:text="${item.litros + ' L'}">0 L</td>
+                        <td th:text="${item.observacion != null ? item.observacion : '-'}">-</td>
+                        <td sec:authorize="hasRole('ADMIN')">
+                            <form th:if="${item.fechaRegistro == hoy}" th:action="@{/ganado/leche/eliminar}" method="post" class="actions-inline">
+                                <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+                                <input type="hidden" name="registroId" th:value="${item.id}">
+                                <input type="hidden" name="ganadoId" th:value="${ganado.id}">
+                                <button type="submit" class="btn btn-danger btn-mini" data-confirm="¿Deseas eliminar este registro de leche?">Eliminar</button>
+                            </form>
+                            <span th:if="${item.fechaRegistro != hoy}" class="status-pill" style="background:#f3f4f6;color:#4b5563;border:1px solid #d1d5db;">Bloqueado</span>
+                        </td>
+                    </tr>
+                    <tr th:if="${#lists.isEmpty(registrosLeche)}">
+                        <td colspan="5"><div class="empty-card">Aún no hay registros reales de ordeño para este bovino.</div></td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </section>
+
+    <section class="section">
+        <div class="table-card" data-reveal>
+            <div class="page-head">
+                <div>
+                    <h2 class="page-title">Historial diario de producción</h2>
+                    <p class="page-subtitle">Acumulado diario utilizado para análisis y proyección.</p>
+                </div>
+            </div>
+            <div class="table-scroll">
+                <table>
+                    <thead>
+                    <tr>
+                        <th>Fecha</th>
+                        <th>Litros reales por día</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr th:each="registro : ${historialLeche}">
+                        <td th:text="${registro.fecha}">2026-01-01</td>
+                        <td th:text="${registro.litros + ' L'}">0 L</td>
+                    </tr>
+                    <tr th:if="${#lists.isEmpty(historialLeche)}">
+                        <td colspan="2"><div class="empty-card">No hay historial de leche disponible.</div></td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </section>
+    </main>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<script th:inline="javascript">
+    (function () {
+        const SIN_DATO = -1;
+        const etiquetas = /*[[${chartEtiquetas}]]*/ [];
+        const produccionRaw = /*[[${chartProduccionReal}]]*/ [];
+        const regresionRaw = /*[[${chartLineaRegresion}]]*/ [];
+        const regresionDisponible = /*[[${chartRegresionDisponible}]]*/ false;
+
+        const produccionReal = produccionRaw.map(function (v) {
+            return (v == null || v < 0) ? null : v;
+        });
+        const lineaRegresion = regresionRaw.map(function (v) {
+            return (v == null || v < 0) ? null : v;
+        });
+
+        const canvas = document.getElementById("graficoLeche");
+        if (!canvas || typeof Chart === "undefined") return;
+
+        const datasets = [{
+            type: "bar",
+            label: "Producción real (L)",
+            data: produccionReal,
+            backgroundColor: "rgba(47, 107, 61, 0.55)",
+            borderColor: "rgba(47, 107, 61, 0.9)",
+            borderWidth: 1,
+            borderRadius: 6,
+            order: 2
+        }];
+
+        if (regresionDisponible) {
+            datasets.push({
+                type: "line",
+                label: "Regresión lineal (L)",
+                data: lineaRegresion,
+                borderColor: "rgba(195, 83, 63, 0.95)",
+                backgroundColor: "rgba(195, 83, 63, 0.08)",
+                borderWidth: 3,
+                pointRadius: 4,
+                pointBackgroundColor: "#c3533f",
+                tension: 0.15,
+                spanGaps: false,
+                order: 1
+            });
+        }
+
+        new Chart(canvas, {
+            data: {
+                labels: etiquetas,
+                datasets: datasets
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                interaction: { mode: "index", intersect: false },
+                plugins: {
+                    legend: {
+                        position: "top",
+                        labels: { font: { family: "Manrope", size: 12 } }
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function (ctx) {
+                                const v = ctx.parsed.y;
+                                if (v == null || Number.isNaN(v)) return ctx.dataset.label + ": sin dato";
+                                return ctx.dataset.label + ": " + v.toFixed(2) + " L";
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        title: { display: true, text: "Litros" },
+                        ticks: { callback: (v) => v + " L" }
+                    },
+                    x: {
+                        ticks: { maxRotation: 45, minRotation: 0, autoSkip: true, maxTicksLimit: 12 }
+                    }
+                }
+            }
+        });
+    })();
+</script>
+<script th:src="@{/js/ganado-ui.js}"></script>
+    <div th:replace="~{fragments/bovibot :: widget}"></div>
+</body>
+</html>
+
+

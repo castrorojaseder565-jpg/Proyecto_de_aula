@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Editar vacuna | BoviControl</title>
+    <link rel="icon" type="image/svg+xml" th:href="@{/images/favicon-ganado-grande.svg}">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@600;700;800&family=Manrope:wght@400;500;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+    <link rel="stylesheet" th:href="@{/css/ganado-ui.css}">
+</head>
+<body class="app-body">
+<div th:replace="~{fragments/layout :: sidebar('vacunas')}"></div>
+<div class="app-frame">
+    <header th:replace="~{fragments/layout :: app-header(title='Editar vacuna', subtitle='Actualiza el registro sanitario')}"></header>
+    <main class="app-content">
+    <section class="section">
+        <div class="form-card" data-reveal>
+            <span class="eyebrow" style="background:rgba(47,107,61,0.08); color:var(--primary);"><i class="fas fa-pen-to-square"></i> Actualizar vacuna</span>
+            <h2 class="page-title">Editar registro de vacuna</h2>
+            <p class="page-subtitle">Mantiene visible el animal asociado y ajusta fechas o intervalos desde una sola pantalla.</p>
+
+            <div th:if="${error}" class="notice notice-error"><span th:text="${error}"></span></div>
+
+            <form th:action="@{/vacuna/actualizar}" th:object="${vacuna}" method="post">
+                <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+                <input type="hidden" th:field="*{id}">
+                <input type="hidden" name="ganadoId" th:value="${vacuna.ganado.id}">
+
+                <div class="form-grid">
+                    <div class="field span-12">
+                        <label for="ganado">Ganado asociado</label>
+                        <input class="input readonly" type="text" id="ganado" th:value="${vacuna.ganado.nombre + ' (' + vacuna.ganado.raza + ')'}" readonly>
+                    </div>
+                    <div class="field span-12">
+                        <label for="nombre">Nombre de la vacuna</label>
+                        <select class="select" id="nombre" th:field="*{nombre}" required>
+                            <option value="">Seleccione una vacuna</option>
+                            <option value="Fiebre Aftosa">Fiebre Aftosa</option>
+                            <option value="Rabia">Rabia</option>
+                            <option value="Brucelosis">Brucelosis</option>
+                            <option value="Carbunco">Carbunco</option>
+                            <option value="Leptospirosis">Leptospirosis</option>
+                            <option value="Otros">Otros</option>
+                        </select>
+                    </div>
+                    <div class="field span-12" id="otroVacunaContainer" style="display:none;">
+                        <label for="nombreOtraVacunaInput">Otra vacuna</label>
+                        <input class="input" type="text" name="nombreOtraVacuna" id="nombreOtraVacunaInput" placeholder="Ej: IBR Bovina" maxlength="100">
+                    </div>
+                    <div class="field span-6">
+                        <label for="fechaAplicacion">Fecha de aplicación</label>
+                        <input class="input" type="date" id="fechaAplicacion" th:field="*{fechaAplicacion}" required>
+                    </div>
+                    <div class="field span-3">
+                        <label for="intervaloCantidad">Intervalo</label>
+                        <input class="input" type="number" id="intervaloCantidad" th:field="*{intervaloCantidad}" min="1" max="365" required>
+                    </div>
+                    <div class="field span-3">
+                        <label for="unidadTiempo">Unidad</label>
+                        <select class="select" id="unidadTiempo" th:field="*{unidadTiempo}" required>
+                            <option value="dias">Días</option>
+                            <option value="semanas">Semanas</option>
+                            <option value="meses">Meses</option>
+                        </select>
+                    </div>
+                    <div class="field span-12">
+                        <label for="proximaDosis">Próxima dosis estimada</label>
+                        <input class="input readonly" type="date" id="proximaDosis" th:field="*{proximaDosis}" readonly>
+                    </div>
+                </div>
+
+                <div class="action-row" style="margin-top:26px;">
+                    <a th:href="@{'/ganado/detalle/' + ${vacuna.ganado.id}}" class="btn btn-outline"><i class="fas fa-arrow-left"></i> Cancelar</a>
+                    <button type="submit" class="btn btn-primary"><i class="fas fa-floppy-disk"></i> Guardar cambios</button>
+                </div>
+            </form>
+        </div>
+    </section>
+    </main>
+</div>
+
+<script th:inline="javascript">
+    const fechaAplicacion = document.getElementById("fechaAplicacion");
+    const intervalo = document.getElementById("intervaloCantidad");
+    const unidad = document.getElementById("unidadTiempo");
+    const proximaDosis = document.getElementById("proximaDosis");
+    const nombreVacunaSelect = document.getElementById("nombre");
+    const otroVacunaContainer = document.getElementById("otroVacunaContainer");
+    const nombreOtraVacunaInput = document.getElementById("nombreOtraVacunaInput");
+    const vacunasPredefinidas = ["Fiebre Aftosa", "Rabia", "Brucelosis", "Carbunco", "Leptospirosis", "Otros"];
+    const nombreOriginal = /*[[${vacuna.nombre}]]*/ '';
+
+    function manejarOtroVacuna() {
+        const nombreActual = nombreVacunaSelect.value;
+        const esOtroNoListado = !vacunasPredefinidas.includes(nombreOriginal);
+
+        if (nombreActual === "Otros") {
+            otroVacunaContainer.style.display = "block";
+            nombreOtraVacunaInput.required = true;
+            if (esOtroNoListado && nombreOtraVacunaInput.value === '') {
+                nombreOtraVacunaInput.value = nombreOriginal;
+            }
+        } else if (esOtroNoListado) {
+            nombreVacunaSelect.value = "Otros";
+            otroVacunaContainer.style.display = "block";
+            nombreOtraVacunaInput.required = true;
+            nombreOtraVacunaInput.value = nombreOriginal;
+        } else {
+            otroVacunaContainer.style.display = "none";
+            nombreOtraVacunaInput.required = false;
+            nombreOtraVacunaInput.value = "";
+        }
+    }
+
+    function formatDate(date) {
+        const d = new Date(date);
+        let month = '' + (d.getMonth() + 1);
+        let day = '' + d.getDate();
+        const year = d.getFullYear();
+        if (month.length < 2) month = '0' + month;
+        if (day.length < 2) day = '0' + day;
+        return [year, month, day].join('-');
+    }
+
+    function calcularProximaDosis() {
+        if (!fechaAplicacion.value || !intervalo.value || !unidad.value) return;
+        const fecha = new Date(fechaAplicacion.value + 'T00:00:00');
+        const cantidad = parseInt(intervalo.value, 10);
+        if (Number.isNaN(cantidad)) return;
+        if (unidad.value === "dias") fecha.setDate(fecha.getDate() + cantidad);
+        else if (unidad.value === "semanas") fecha.setDate(fecha.getDate() + (cantidad * 7));
+        else if (unidad.value === "meses") fecha.setMonth(fecha.getMonth() + cantidad);
+        proximaDosis.value = formatDate(fecha);
+    }
+
+    nombreVacunaSelect.addEventListener("change", manejarOtroVacuna);
+    fechaAplicacion.addEventListener("change", calcularProximaDosis);
+    intervalo.addEventListener("input", calcularProximaDosis);
+    unidad.addEventListener("change", calcularProximaDosis);
+
+    document.addEventListener("DOMContentLoaded", () => {
+        manejarOtroVacuna();
+        calcularProximaDosis();
+    });
+</script>
+<script th:src="@{/js/ganado-ui.js}"></script>
+    <div th:replace="~{fragments/bovibot :: widget}"></div>
+</body>
+</html>
+
+
+
+
+
+
+
+
+
+
+
+
+

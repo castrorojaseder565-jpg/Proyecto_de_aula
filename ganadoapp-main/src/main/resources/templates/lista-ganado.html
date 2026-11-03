@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Panel del hato | BoviControl</title>
+    <link rel="icon" type="image/svg+xml" th:href="@{/images/favicon-ganado-grande.svg}">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@600;700;800&family=Manrope:wght@400;500;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+    <link rel="stylesheet" th:href="@{/css/ganado-ui.css}">
+</head>
+<body class="app-body">
+<div th:replace="~{fragments/layout :: sidebar('lista')}"></div>
+<div class="app-frame">
+    <header th:replace="~{fragments/layout :: app-header(title='Resumen de la finca', subtitle='Inventario, salud y operación diaria del hato')}"></header>
+    <main class="app-content herd-inventory">
+        <section class="section">
+            <div th:if="${mensaje}" class="notice notice-success" style="margin-bottom:16px;"><span th:text="${mensaje}"></span></div>
+            <div th:if="${error}" class="notice notice-error" style="margin-bottom:16px;"><span th:text="${error}"></span></div>
+            <div th:if="${param.denegado}" class="notice notice-error" style="margin-bottom:16px;">
+                No tienes permisos para acceder a esa sección con tu rol actual.
+            </div>
+
+            <div class="kpi-grid" data-reveal>
+                <article class="kpi-card">
+                    <header>Inventario</header>
+                    <strong th:text="${#lists.size(listaGanado)}">0</strong>
+                    <p>Bovinos registrados</p>
+                </article>
+                <article class="kpi-card" sec:authorize="hasRole('ADMIN')">
+                    <header>Operación</header>
+                    <strong>Admin</strong>
+                    <p>Registro, edición e indicadores</p>
+                </article>
+                <article class="kpi-card" sec:authorize="hasRole('VETERINARIO')">
+                    <header>Salud</header>
+                    <strong>Clínico</strong>
+                    <p>Vacunas y seguimiento sanitario</p>
+                </article>
+                <article class="kpi-card">
+                    <header>Alertas</header>
+                    <strong>Activas</strong>
+                    <p>Revisa gestión sanitaria y vacunas</p>
+                </article>
+                <article class="kpi-card">
+                    <header>Sincronizado</header>
+                    <strong>Hoy</strong>
+                    <p>Cola offline disponible en este panel</p>
+                </article>
+            </div>
+        </section>
+
+        <section class="section">
+            <div class="dashboard-grid">
+                <div class="panel-card" data-reveal>
+                    <div class="page-head">
+                        <div>
+                            <h2 class="page-title">Acciones rápidas</h2>
+                            <p class="page-subtitle">Atajos según tu rol, sin cambiar las rutas existentes.</p>
+                        </div>
+                    </div>
+                    <div class="action-panel">
+                        <a th:href="@{/ganado/nuevo}" class="action-card" sec:authorize="hasRole('ADMIN')">
+                            <div>
+                                <div class="icon-wrap"><i class="fas fa-plus"></i></div>
+                                <h3>Registrar ganado</h3>
+                                <p>Crear una nueva ficha animal con datos base del inventario.</p>
+                            </div>
+                            <strong>Nuevo ingreso</strong>
+                        </a>
+                        <a th:href="@{/ganado/estadisticas}" class="action-card" sec:authorize="hasRole('ADMIN')">
+                            <div>
+                                <div class="icon-wrap"><i class="fas fa-chart-pie"></i></div>
+                                <h3>Ver estadísticas</h3>
+                                <p>Indicadores del hato, distribución y peso promedio.</p>
+                            </div>
+                            <strong>Analítica</strong>
+                        </a>
+                        <a th:href="@{/vacuna/todas}" class="action-card" sec:authorize="hasAnyRole('ADMIN','VETERINARIO')">
+                            <div>
+                                <div class="icon-wrap"><i class="fas fa-notes-medical"></i></div>
+                                <h3>Consultar vacunas</h3>
+                                <p>Revisión sanitaria, próximas dosis y estados del calendario.</p>
+                            </div>
+                            <strong>Control sanitario</strong>
+                        </a>
+                        <a th:href="@{/vacuna/registrar}" class="action-card" sec:authorize="hasRole('VETERINARIO')">
+                            <div>
+                                <div class="icon-wrap"><i class="fas fa-syringe"></i></div>
+                                <h3>Registrar vacuna</h3>
+                                <p>Agrega una aplicación y calcula la próxima dosis.</p>
+                            </div>
+                            <strong>Seguimiento</strong>
+                        </a>
+                        <a th:href="@{/ganado/gestion-sanitaria}" class="action-card" sec:authorize="hasAnyRole('ADMIN','VETERINARIO')">
+                            <div>
+                                <div class="icon-wrap"><i class="fas fa-heart-pulse"></i></div>
+                                <h3>Gestión sanitaria</h3>
+                                <p>Monitorea alertas, vacunas y estado de salud de todo el hato.</p>
+                            </div>
+                            <strong>Vista sanitaria</strong>
+                        </a>
+                    </div>
+                </div>
+
+                <aside class="panel-card" data-reveal>
+                    <h2 class="page-title" style="font-size:1.5rem;">Sincronización offline</h2>
+                    <div class="offline-sync-head" style="margin-top:12px;">
+                        <div class="actions-inline">
+                            <button id="sync-retry-btn" type="button" class="btn btn-warning btn-mini">Reintentar fallidos</button>
+                            <button id="sync-now-btn" type="button" class="btn btn-outline btn-mini">Sincronizar ahora</button>
+                        </div>
+                    </div>
+                    <p id="sync-panel-status" class="muted" style="margin: 8px 0 12px;">Estado de conexión y pendientes.</p>
+                    <div class="table-scroll" style="max-height:220px;">
+                        <table>
+                            <thead>
+                            <tr>
+                                <th>Tipo</th>
+                                <th>Acción</th>
+                                <th>Fecha</th>
+                                <th>Intentos</th>
+                                <th>Estado</th>
+                                <th>Error</th>
+                            </tr>
+                            </thead>
+                            <tbody id="sync-queue-body">
+                            <tr>
+                                <td colspan="6"><div class="empty-card" style="padding:14px;">Sin registros pendientes.</div></td>
+                            </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </aside>
+            </div>
+        </section>
+
+        <section class="section">
+            <div class="table-card" data-reveal>
+                <div class="page-head">
+                    <div>
+                        <h2 class="page-title">Inventario de bovinos</h2>
+                        <p class="page-subtitle">Busca por nombre y entra a la ficha, edición o predicción de leche.</p>
+                    </div>
+                </div>
+                <form th:action="@{/ganado/lista}" method="get" class="form-grid" style="margin-bottom:18px;">
+                    <div class="field span-8">
+                        <label for="buscar">Buscar bovino</label>
+                        <input class="input" type="text" id="buscar" name="buscar" th:value="${filtro}" placeholder="Buscar solo por nombre del bovino">
+                    </div>
+                    <div class="field span-4" style="justify-content:flex-end;">
+                        <label>&nbsp;</label>
+                        <div class="action-row">
+                            <button type="submit" class="btn btn-primary"><i class="fas fa-magnifying-glass"></i> Buscar</button>
+                            <a th:href="@{/ganado/lista}" class="btn btn-outline"><i class="fas fa-rotate-left"></i> Limpiar</a>
+                        </div>
+                    </div>
+                </form>
+                <div class="table-scroll">
+                    <table class="ganado-table-large">
+                        <thead>
+                        <tr>
+                            <th>Arete</th>
+                            <th>Nombre</th>
+                            <th>Raza</th>
+                            <th>Edad</th>
+                            <th>Peso</th>
+                            <th>Sexo</th>
+                            <th>Marca</th>
+                            <th>Estado</th>
+                            <th>Acciones</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr th:each="g : ${listaGanado}">
+                            <td th:text="${g.numeroArete}"></td>
+                            <td th:text="${g.nombre}"></td>
+                            <td th:text="${g.raza}"></td>
+                            <td th:text="${#numbers.formatDecimal(g.edad, 1, 0) + ' ' + (g.unidadTiempoEdad == 'anios' ? 'años' : (g.unidadTiempoEdad == 'meses' ? 'meses' : (g.unidadTiempoEdad == 'dias' ? 'días' : g.unidadTiempoEdad)))}"></td>
+                            <td th:text="${g.peso + ' kg'}"></td>
+                            <td th:text="${g.sexo}"></td>
+                            <td th:text="${g.marcaHierro}"></td>
+                            <td>
+                                <span class="status-pill"
+                                      th:text="${g.estadoSalud}"
+                                      th:classappend="${g.estadoSalud == 'Saludable'} ? ' status-ok' : ' status-danger'">Estado</span>
+                            </td>
+                            <td>
+                                <div class="actions-inline table-row-actions">
+                                    <a th:href="@{/ganado/detalle/{id}(id=${g.id})}" class="btn btn-outline btn-mini">
+                                        <i class="fas fa-eye"></i> Ver
+                                    </a>
+                                    <a th:href="@{/ganado/editar/{id}(id=${g.id})}" class="btn btn-warning btn-mini" sec:authorize="hasRole('ADMIN')"><i class="fas fa-pen-to-square"></i> Editar</a>
+                                    <form th:action="@{/ganado/eliminar/{id}(id=${g.id})}" method="post" sec:authorize="hasRole('ADMIN')">
+                                        <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+                                        <button type="submit" class="btn btn-danger btn-mini" data-confirm="¿Deseas eliminar este ganado?"><i class="fas fa-trash-can"></i> Eliminar</button>
+                                    </form>
+                                    <a th:href="@{'/ganado/prediccion/' + ${g.id}}" class="btn btn-secondary btn-mini">
+                                        <i class="fas fa-chart-line"></i> Predicción
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                        <tr th:if="${#lists.isEmpty(listaGanado)}">
+                            <td colspan="9">
+                                <div class="empty-card">Aún no hay ganado registrado. Usa el panel para agregar el primer animal.</div>
+                            </td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+    </main>
+</div>
+<script th:src="@{/js/ganado-ui.js}"></script>
+<div th:replace="~{fragments/bovibot :: widget}"></div>
+</body>
+</html>
